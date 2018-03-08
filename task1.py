@@ -16,7 +16,7 @@ def get_feature_index_list(str_f_list):
 
 def main():
     X, y = dataloader.load_all_data()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=(418/(418+891)))
+    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=float(418)/(418+891))
     print("Number of training examples: {}, testing examples: {}".format(len(X_train), len(X_test)))
     # Origianl features: pclass,name,last_name,sex,age,sibsp,has_sibsp,parch,has_parch,ticket,fare,fare_group,cabin,embarked,boat,body,dest
 
@@ -24,10 +24,14 @@ def main():
         "pclass",
         "sex",
         "sibsp",
+        "has_sibsp",
         "parch",
+        "has_parch",
         "fare",
-        "pclass,sex,sibsp,parch,fare",
-        "pclass,sex,sibsp,parch,fare,has_sibsp,has_parch,fare_group"
+        "fare_group",
+        "last_name",
+        "pclass,last_name,sex,sibsp,parch,fare,has_sibsp,has_parch,fare_group",
+        "pclass,sex,sibsp,parch,fare"
     ]
 
     for testing_feature_set in testing_feature_sets:

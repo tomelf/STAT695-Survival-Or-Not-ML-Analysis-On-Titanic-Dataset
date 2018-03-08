@@ -14,15 +14,21 @@ def preprocess(data):
     return np.array(data)
 
 def preprocess2(data):
+    last_name_set = set()
     for idx, d in enumerate(data):
         pclass,name,sex,age,sibsp,parch,ticket,fare,cabin,embarked,boat,body,dest = d;
         # get last name
         name_objs = re.match( r'([^,]*)', name)
         last_name = name_objs.group(1).strip()
+        last_name_set.add(last_name)
         sex = (0 if sex == "male" else 1)
         has_sibsp = 1 if int(sibsp) > 0 else 0
         has_parch = 1 if int(parch) > 0 else 0
+        # add sex(0:male,1:female), has_sibsp, has_parch
         data[idx] = [pclass,name,last_name,sex,age,sibsp,has_sibsp,parch,has_parch,ticket,fare,cabin,embarked,boat,body,dest]
+
+    last_name_set = sorted(list(last_name_set))
+
     np_data_fare = np.array(data)[:,10]
     np_data_fare[np_data_fare==""] = "0"
     np_data_fare = np_data_fare.astype('float')
@@ -30,6 +36,10 @@ def preprocess2(data):
     fare_std = np.std(np_data_fare)
     group_bounds = [fare_mean-2*fare_std, fare_mean-fare_std, fare_mean, fare_mean+fare_std, fare_mean+2*fare_std]
     for idx, d in enumerate(data):
+        # add last_name (as nominal value)
+        data[idx][2] = last_name_set.index(data[idx][2])
+
+        # add fare_group
         data[idx][10] = 0 if data[idx][10]=="" else float(data[idx][10])
         fare = data[idx][10]
         fare_group = -1
