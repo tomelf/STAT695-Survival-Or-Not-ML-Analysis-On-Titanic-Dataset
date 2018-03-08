@@ -1,8 +1,16 @@
 import numpy as np
 import csv
+import re
 
 def preprocess(data):
-    return data
+    for idx, d in enumerate(data):
+        PassengerId,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked = d;
+        # get last name
+        name_objs = re.match( r'([^,]*)', Name)
+        last_name = name_objs.group(1).strip()
+        Sex = (0 if Sex == "male" else 1)
+        data[idx] = [PassengerId,Pclass,Name,last_name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked]
+    return np.array(data)
 
 def load_testing_data():
     test_data_path = "dataset/test.csv"
