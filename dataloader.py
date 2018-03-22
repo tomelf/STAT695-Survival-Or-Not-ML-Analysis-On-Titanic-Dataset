@@ -3,6 +3,12 @@ import csv
 import re
 import sys
 
+def get_feature_index_list(str_f_list):
+    str_feature_list = "pclass,name,last_name,sex,age,sibsp,has_sibsp,parch,has_parch,ticket,fare,fare_group,cabin,embarked,boat,body,dest"
+    feature_list = str_feature_list.split(",")
+    f_list = str_f_list.split(",")
+    return [feature_list.index(f) for f in f_list]
+
 def preprocess(data):
     for idx, d in enumerate(data):
         PassengerId,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked = d;
@@ -59,6 +65,20 @@ def preprocess2(data):
         data[idx].insert(11, fare_group)
     return np.array(data)
 
+def save_dataset(filename, X, y):
+    dest_path = "dataset/{}.csv".format(filename)
+
+    with open(dest_path, 'w') as csvfile:
+        fieldnames = ['pclass','survived','name','last_name','sex','age','sibsp','has_sibsp','parch','has_parch','ticket','fare','fare_group','cabin','embarked','boat','body','dest']
+        writer = csv.writer(csvfile, delimiter=',',
+                            quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow(fieldnames)
+        data = np.insert(X, 1, y, axis=1)
+        for d in data:
+            writer.writerow(d.tolist())
+        
+
 def load_all_data():
     test_data_path = "dataset/titanic3.csv"
 
@@ -73,6 +93,8 @@ def load_all_data():
                 y_test.append(survived)
 
     X_test = preprocess2(X_test)
+    
+    save_dataset("titanic3.preprocessed", X_test, y_test)
 
     return X_test, y_test
 
