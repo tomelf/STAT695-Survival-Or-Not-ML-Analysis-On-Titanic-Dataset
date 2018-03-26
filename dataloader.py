@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import csv
 import re
 import sys
@@ -10,16 +11,6 @@ def get_feature_index_list(str_f_list):
     return [feature_list.index(f) for f in f_list]
 
 def preprocess(data):
-    for idx, d in enumerate(data):
-        PassengerId,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked = d;
-        # get last name
-        name_objs = re.match( r'([^,]*)', Name)
-        last_name = name_objs.group(1).strip()
-        Sex = (0 if Sex == "male" else 1)
-        data[idx] = [PassengerId,Pclass,Name,last_name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked]
-    return np.array(data)
-
-def preprocess2(data):
     last_name_set = set()
     for idx, d in enumerate(data):
         pclass,name,sex,age,sibsp,parch,ticket,fare,cabin,embarked,boat,body,dest = d;
@@ -92,40 +83,19 @@ def load_all_data():
                 X_test.append([pclass,name,sex,age,sibsp,parch,ticket,fare,cabin,embarked,boat,body,dest])
                 y_test.append(survived)
 
-    X_test = preprocess2(X_test)
+    X_test = preprocess(X_test)
     
     save_dataset("titanic3.preprocessed", X_test, y_test)
 
     return X_test, y_test
 
-def load_testing_data():
-    test_data_path = "dataset/test.csv"
-
-    X_test = []
-    with open(test_data_path, 'r') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
-        for idx, row in enumerate(spamreader):
-            if idx > 0:
-                PassengerId,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked = row
-                X_test.append([PassengerId,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked])
-
-    X_test = preprocess(X_test)
-
-    return X_test
-
-def load_training_data():
-    train_data_path = "dataset/train.csv"
-
-    X_train = []
-    y_train = []
-    with open(train_data_path, 'r') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',', quotechar='"')
-        for idx, row in enumerate(spamreader):
-            if idx > 0:
-                PassengerId,Survived,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked = row
-                X_train.append([PassengerId,Pclass,Name,Sex,Age,SibSp,Parch,Ticket,Fare,Cabin,Embarked])
-                y_train.append(Survived)
-
-    X_train = preprocess(X_train)
-
-    return X_train, y_train
+def load_preprocessed_data():
+    preprocessed_train = pd.read_csv("dataset/train.preprocessed.csv")
+    preprocessed_test = pd.read_csv("dataset/test.preprocessed.csv")
+    
+    X_train = preprocessed_train.drop(["survived"], axis=1).values
+    y_train = preprocessed_train["survived"].values
+    X_test = preprocessed_test.drop(["survived"], axis=1).values
+    y_test = preprocessed_test["survived"].values
+    
+    return [X_train, X_test, y_train, y_test]

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import os
 import re
 
@@ -10,23 +11,12 @@ import graphviz
 import dataloader
 
 def main():
-    X, y = dataloader.load_all_data()
+    X_train, X_test, y_train, y_test = dataloader.load_preprocessed_data()
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=float(418)/(418+891))
     print("Number of training examples: {}, testing examples: {}".format(len(X_train), len(X_test)))
     # Origianl features: pclass,name,last_name,sex,age,sibsp,has_sibsp,parch,has_parch,ticket,fare,fare_group,cabin,embarked,boat,body,dest
 
     testing_feature_sets = [
-        # "pclass",
-        # "sex",
-        # "sibsp",
-        # "has_sibsp",
-        # "parch",
-        # "has_parch",
-        # "fare",
-        # "fare_group",
-        # "last_name",
-        # "pclass,last_name,sex,sibsp,parch,fare,has_sibsp,has_parch,fare_group",
         "pclass,sex,sibsp,parch,fare"
     ]
 
@@ -38,7 +28,7 @@ def main():
 
         # clf = svm.SVC(kernel='rbf', C=1, gamma='auto', probability=False)
         
-        clf = tree.DecisionTreeClassifier(criterion="entropy", max_depth=7)
+        clf = tree.DecisionTreeClassifier(criterion="entropy", max_depth=4)
 
         clf.fit(X_train_filtered, y_train)
         print("Training accuracy: {}, Testing accuracy: {}".format(
@@ -59,7 +49,7 @@ def main():
         dot_data = tree.export_graphviz(clf, 
                                         out_file=None, 
                                         feature_names=(testing_feature_set.split(',')),
-                                        class_names=["survived", "dead"],  
+                                        class_names=["dead", "survivied"],  
                                         filled=True, 
                                         rounded=True,
                                         impurity=True,
