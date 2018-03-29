@@ -1,0 +1,45 @@
+---
+title: "Titanic survival analysis"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Preload library and dataset train.preprocessed.csv, test.preprocessed.csv:
+
+```{r}
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(pROC)
+library(ROCR)
+
+titanic_train = read.csv("dataset/train.preprocessed.csv") 
+titanic_test = read.csv("dataset/test.preprocessed.csv") 
+```
+
+Initilize a Decision Tree model and draw the tree:
+
+```{r}
+titanic_train$survived = factor(titanic_train$survived, 
+                                levels = c(0,1),
+                                labels = c("dead", "survived"))
+
+tree <- rpart(survived ~ age+sibsp+parch+fare+sex,
+  	method="class", data=titanic_train)
+prp(tree)
+
+```
+
+```{r}
+titanic_test.pred = predict(tree, titanic_test, type="prob")
+titanic_test.p.scores = prediction(titanic_test.pred[,2], titanic_test$survived)
+titanic_test.p.perf = performance(titanic_test.p.scores, "tpr", "fpr")
+
+titanic_test.p.perf
+
+plot(titanic_test.p.perf, col="blue")
+abline(a=0, b=1)
+
+```
+
