@@ -5,41 +5,86 @@ output: html_notebook
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-Preload library and dataset train.preprocessed.csv, test.preprocessed.csv:
+Preload library and dataset train.csv, test_with_result.csv:
 
 ```{r}
-library(rpart)
-library(rpart.plot)
-library(rattle)
+library(caret)
+library(caTools)
+library(DMwR)
 library(pROC)
 library(ROCR)
 
-titanic_train = read.csv("dataset/train.preprocessed.csv") 
-titanic_test = read.csv("dataset/test.preprocessed.csv") 
+set.seed(100)
+
+titanic_train = read.csv("dataset/kaggle_with_result/train.csv") 
+titanic_test = read.csv("dataset/kaggle_with_result/test_with_result.csv") 
+
+titanic_train = knnImputation(titanic_train, k=10)
+titanic_test = knnImputation(titanic_test, k=10)
+
+titanic_train$Survived = factor(titanic_train$Survived, 
+                                levels = c(0,1),
+                                labels = c("dead", "survived"))
+titanic_test$Survived = factor(titanic_test$Survived, 
+                                levels = c(0,1),
+                                labels = c("dead", "survived"))
+
+summary(titanic_train)
+summary(titanic_test)
 ```
 
 Initilize a Decision Tree model and draw the tree:
 
 ```{r}
-titanic_train$survived = factor(titanic_train$survived, 
-                                levels = c(0,1),
-                                labels = c("dead", "survived"))
+myControl <- trainControl(
+  method = "cv", number = 10,
+  summaryFunction = twoClassSummary,
+  classProbs = TRUE # IMPORTANT!
+)
 
-tree <- rpart(survived ~ age+sibsp+parch+fare+sex,
-  	method="class", data=titanic_train)
-prp(tree)
+dtree <- train(
+  Survived ~ SibSp+Parch+Fare+Sex, 
+  data=titanic_train,
+  method = "rpart",
+  metric="ROC",
+  # preProcess = "knnImpute",
+  trControl = myControl
+)
+
+plot(dtree)
+
+dforest <- train(
+  Survived ~ SibSp+Parch+Fare+Sex, 
+  data=titanic_train,
+  method = "ranger",
+  metric="ROC",
+  # preProcess = "knnImpute",
+  trControl = myControl
+)
+
+plot(dforest)
 
 ```
 
 ```{r}
-titanic_test.pred = predict(tree, titanic_test, type="prob")
-titanic_test.p.scores = prediction(titanic_test.pred[,2], titanic_test$survived)
-titanic_test.p.perf = performance(titanic_test.p.scores, "tpr", "fpr")
 
-titanic_test.p.perf
+titanic_test.tree.pred = predict(dtree, titanic_test)
+pred = ifelse(titanic_test.tree.pred=="dead",0,1)
+actual = ifelse(titanic_test$Survived=="dead",0,1)
+confusionMatrix(titanic_test.tree.pred, titanic_test$Survived)
+perf_tree <- performance(prediction(pred, actual), "tpr", "fpr" )
 
-plot(titanic_test.p.perf, col="blue")
-abline(a=0, b=1)
+titanic_test.forest.pred = predict(dforest, titanic_test)
+pred = ifelse(titanic_test.forest.pred=="dead",0,1)
+actual = ifelse(titanic_test$Survived=="dead",0,1)
+confusionMatrix(titanic_test.forest.pred, titanic_test$Survived)
+perf_forest <- performance(prediction(pred, actual), "tpr", "fpr" )
+
+plot(perf_tree, col="red")
+plot(perf_forest, add = TRUE, col="blue")
+abline(0, 1, lty = 2)
+legend(0.7, 0.3, legend=c("Random Forest", "Decision Tree"),
+       col=c("red", "blue"), lty=1:2, cex=0.8)
 
 ```
 
