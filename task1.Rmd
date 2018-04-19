@@ -1,6 +1,8 @@
 ---
 title: "Titanic survival analysis"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
@@ -57,6 +59,28 @@ dforest <- train(
   Survived ~ SibSp+Parch+Fare+Sex, 
   data=titanic_train,
   method = "ranger",
+  metric="ROC",
+  # preProcess = "knnImpute",
+  trControl = myControl
+)
+
+plot(dforest)
+
+dforest <- train(
+  Survived ~ SibSp+Parch+Fare+Sex, 
+  data=titanic_train,
+  method = "ranger",
+  metric="ROC",
+  # preProcess = "knnImpute",
+  trControl = myControl
+)
+
+plot(dforest)
+
+dforest <- train(
+  Survived ~ SibSp+Parch+Fare+Sex, 
+  data=titanic_train,
+  method = "ksvm",
   metric="ROC",
   # preProcess = "knnImpute",
   trControl = myControl
