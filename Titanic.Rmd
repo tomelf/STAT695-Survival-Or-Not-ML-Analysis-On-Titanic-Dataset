@@ -48,7 +48,8 @@ Load raw train test dataset
 # load training data 
 setwd('dataset/kaggle_with_result')
 train = read.csv("train.csv")
-test = read.csv("test_with_result.csv")
+# test = read.csv("test_with_result.csv")
+test = read.csv("test_with_result_jackrose.csv")
 summary(train)
 ```
 
@@ -144,6 +145,8 @@ Build features for family_survived and family_dead:
   
   # This particular record has missing fare
   test[test$PassengerId==1044,"Fare"] <- 14.454
+  test[test$PassengerId==1310,"Fare"] <- 4350
+  test[test$PassengerId==1311,"Fare"] <- 7.775
   
 ```
 
@@ -162,7 +165,7 @@ Initilize classification models:
     method = "cv", number = 10,
     summaryFunction = twoClassSummary,
     allowParallel = FALSE,
-    preProcOptions = list(rangeBounds=c(0,1)),
+    preProcOptions = list(rangeBounds=c(0,1), k=5),
     classProbs = TRUE # IMPORTANT!
   )
 
@@ -173,7 +176,7 @@ Initilize classification models:
     method = "svmRadial",
     # tuneGrid = data.frame(.C = c(), .sigma = c()),
     metric="ROC",
-    preProcess = "range",
+    preProcess = c("range", "knnImpute"),
     trControl = myControl
   )
   print(svm_model)
@@ -186,7 +189,7 @@ Initilize classification models:
     method = "rpart",
     # tuneGrid = data.frame(.cp = c()),
     metric="ROC",
-    preProcess = "range",
+    preProcess = c("range", "knnImpute"),
     trControl = myControl
   )
   print(rpart_model)
@@ -199,7 +202,7 @@ Initilize classification models:
     method = "ranger",
     # tuneGrid = data.frame(.mtry = c(), .splitrule = c()),
     metric="ROC",
-    preProcess = "range",
+    preProcess = c("range", "knnImpute"),
     trControl = myControl
   )
   print(ranger_model)
@@ -212,7 +215,7 @@ Initilize classification models:
     method = "avNNet",
     # tuneGrid = data.frame(.size = c(), .decay = c(), .bag=c()),
     metric="ROC",
-    preProcess = "range",
+    preProcess = c("range", "knnImpute"),
     trControl = myControl
   )
   print(avNNet_model)
@@ -227,7 +230,7 @@ Initilize classification models:
     # act.fct = 'tanh',
     tuneGrid = data.frame(layer1 = seq(from = 10, to = 70, by = 10), layer2 = seq(from = 10, to = 70, by = 10), layer3 = 0, learning.rate=0.01, momentum=0.9, dropout=0, activation = 'tanh'),
     metric="ROC",
-    preProcess = "range",
+    preProcess = c("range", "knnImpute"),
     trControl = myControl
   )
   print(ANN_model_RTWu)
@@ -238,7 +241,7 @@ Initilize classification models:
 Test models and generate results:
 
 ```{r}
-  
+
   test$pred_by_gender <- (test$Sex=='female')*1
   test$pred_by_svm = predict(svm_model, newdata=test, type="prob")[["survived"]]
   test$pred_by_rpart = predict(rpart_model, newdata=test, type="prob")[["survived"]]
@@ -260,7 +263,7 @@ Test models and generate results:
   ROC_avNNet
   ROC_ANN_model_RTWu
   
-  png("roc_models.png", width = 7, height = 4, units = 'in', res = 300)
+  # png("roc_models.png", width = 7, height = 4, units = 'in', res = 300)
   
   plot(ROC_gender, col = "blue", asp = NA, legacy.axes=TRUE, type = c("l"), main="ROC of classification models")
   lines(ROC_svm, col = "green", type = c("l"))
@@ -268,9 +271,9 @@ Test models and generate results:
   lines(ROC_ranger, col = "orange", type = c("l"))
   lines(ROC_avNNet, col = "blueviolet", type = c("l"))
   lines(ROC_ANN_model_RTWu, col = "deepskyblue", type = c("l"))
-  legend(0.50, 0.55, legend=c("Decision Tree", "By Gender", "SVM", "Random Forest", "Model Averaged Neural Network", "Multi-layer Perceptron"),
+  legend(0.43, 0.55, legend=c("Decision Tree", "By Gender", "SVM", "Random Forest", "Model Averaged Neural Network", "Multi-layer Perceptron"),
        col=c("red", "blue", "green", "orange", "blueviolet", "deepskyblue"), lty=1, cex=0.8)
   
-  dev.off()
+  # dev.off()
 
 ```
